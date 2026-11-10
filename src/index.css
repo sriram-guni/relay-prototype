@@ -1,0 +1,214 @@
+@import "@fontsource-variable/space-grotesk";
+@import "@fontsource-variable/dm-sans";
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Space Grotesk Variable", "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "DM Sans Variable", "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-navy: #14213d;
+  --color-ink: #17253e;
+  --color-muted: #657083;
+  --color-cream: #f7f4ec;
+  --color-card: #fffefb;
+  --color-line: #e7e3db;
+  --color-orange: #f28c28;
+  --color-orange-deep: #d9741a;
+  --color-orange-light: #fff1df;
+  --color-green: #287a5a;
+  --color-green-light: #e7f4ed;
+  --color-sand: #efe9dd;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-orange);
+    outline-offset: 2px;
+  }
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .thin-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #d9d4c9 transparent;
+  }
+  .press {
+    transition: transform 160ms var(--ease-out-soft), box-shadow 200ms var(--ease-out-soft),
+      background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  }
+  .press:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+  .field {
+    width: 100%;
+    border-radius: 14px;
+    border: 1px solid var(--color-line);
+    background: #fff;
+    padding: 12px 14px;
+    font-size: 15px;
+    color: var(--color-ink);
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+  .field::placeholder {
+    color: #9aa1ad;
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-navy);
+    box-shadow: 0 0 0 3px rgba(20, 33, 61, 0.08);
+  }
+  .field[aria-invalid="true"] {
+    border-color: #c8553d;
+    box-shadow: 0 0 0 3px rgba(200, 85, 61, 0.08);
+  }
+}
+
+/* ---------- motion ---------- */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes ring {
+  from {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.anim-fade-up {
+  animation: fade-up 240ms var(--ease-out-soft) both;
+}
+.anim-fade-in {
+  animation: fade-in 200ms ease both;
+}
+.anim-sheet-up {
+  animation: sheet-up 280ms var(--ease-out-soft) both;
+}
+.anim-pop {
+  animation: pop 360ms var(--ease-out-soft) both;
+}
+.anim-toast {
+  animation: toast-in 220ms var(--ease-out-soft) both;
+}
+.anim-slide-in {
+  animation: slide-in 240ms var(--ease-out-soft) both;
+}
+.anim-ring {
+  animation: ring 900ms var(--ease-out-soft) 150ms both;
+}
+.draw-check {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: draw 320ms var(--ease-out-soft) 120ms forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+  }
+  .draw-check {
+    stroke-dashoffset: 0;
+  }
+}
