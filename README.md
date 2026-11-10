@@ -4,6 +4,9 @@
 
 Relay is a clickable prototype of a campus marketplace that connects UIUC students moving *out* of residence halls with students moving *in*. It was built for the TE 200 Idea Fair (December 4, 2026).
 
+**Try it live: https://sriram-guni.github.io/relay-prototype/**
+(Updates automatically within a couple of minutes of every push to `main`.)
+
 > This is a prototype. All listings, people, ratings, pickups and claims are simulated. Nothing is bought, sold or reserved. Relay is not affiliated with or endorsed by University Housing.
 
 ---
