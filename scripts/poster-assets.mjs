@@ -118,6 +118,23 @@ const nav = (page, n) => page.getByRole('navigation').getByRole('button', { name
   console.log('✓ booth-desktop-view.png');
   await page.close();
 }
+// Standalone desktop app
+{
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, reducedMotion: 'reduce' });
+  const page = await ctx.newPage();
+  await page.goto(`${url}?view=desktop`, { waitUntil: 'networkidle' });
+  await page.addStyleTag({ content: CLEAN_CSS });
+  await page.evaluate(() => document.fonts.ready);
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: `${OUT}F-desktop-app-discover.png` });
+  await page.locator('#screen-discover [data-listing="l-fridge-townsend"]').click();
+  await page.getByRole('heading', { name: 'Compact Mini Fridge' }).waitFor();
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: `${OUT}F-desktop-app-detail.png` });
+  console.log('✓ F-desktop-app-*.png');
+  await ctx.close();
+}
 {
   const page = await newPage(1440, 1000, 3);
   await framed(page, 'A-discover-phone');

@@ -248,6 +248,98 @@ await check('claim flow works again after reset (repeatable demo)', async () => 
   expect((await cards()) === 12, 'second reset failed');
 });
 
+console.log('\nDesktop app (?view=desktop)');
+{
+  const d = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  d.on('pageerror', (e) => errors.push(e.message));
+  await d.goto(`${url}?view=desktop`, { waitUntil: 'networkidle' });
+  const dd = d.locator('#screen-discover');
+  const dcards = () => dd.locator('[data-listing]').count();
+  const dnav = (name) => d.getByRole('navigation').getByRole('button', { name: new RegExp('^' + name) });
+  const side = (group, name) => d.getByRole('group', { name: group }).getByRole('button', { name: new RegExp('^' + name) });
+
+  await check('renders full-width with top navigation (no phone frame)', async () => {
+    const frame = await d.locator('#app-frame').boundingBox();
+    expect(frame.width === 1440, `frame width ${frame.width}`);
+    expect((await d.getByRole('navigation').count()) === 1, 'expected one nav');
+    expect((await dcards()) === 12, `got ${await dcards()}`);
+  });
+  await check('sidebar filters combine and show counts', async () => {
+    await side('Filter by residence area', 'ISR').click();
+    expect((await dcards()) === 3, `ISR got ${await dcards()}`);
+    await side('Filter by category', 'Fridges').click();
+    expect((await dcards()) === 1, `ISR+Fridges got ${await dcards()}`);
+    await d.getByRole('button', { name: 'Reset filters' }).click();
+    expect((await dcards()) === 12, `reset got ${await dcards()}`);
+  });
+  await check('search works on desktop', async () => {
+    await dd.getByPlaceholder('Search dorm essentials...').fill('lamp');
+    expect((await dcards()) === 2, `got ${await dcards()}`);
+    await dd.getByRole('button', { name: 'Clear search' }).click();
+  });
+  await check('detail page + claim dialog + success', async () => {
+    await dd.locator('[data-listing="l-fridge-townsend"]').click();
+    await d.getByRole('heading', { name: 'Compact Mini Fridge' }).waitFor();
+    await d.getByRole('heading', { name: 'Cleaned. Checked. Ready.' }).waitFor();
+    await d.getByRole('button', { name: 'Claim for move-in day' }).click();
+    await d.getByRole('radio', { name: 'Thursday, Aug 19, 2027' }).click();
+    await d.getByRole('button', { name: 'Confirm for Thu, Aug 19' }).click();
+    await d.getByText("It's yours!").waitFor();
+    await d.getByRole('dialog').getByRole('button', { name: 'View my claims' }).click();
+    await d.locator('#screen-claims').getByText('Thursday, Aug 19, 2027').waitFor();
+    expect((await dcards()) === 11, 'fridge still listed');
+  });
+  await check('pickup confirmation and rating on desktop', async () => {
+    await d.getByRole('button', { name: 'Confirm pickup' }).click();
+    await d.getByRole('button', { name: 'Yes, I have it' }).click();
+    await d.getByRole('radio', { name: '4 stars' }).click();
+    await d.getByRole('button', { name: 'Submit rating' }).click();
+    await d.getByText('Handoff complete').waitFor();
+  });
+  await check('listing form with live preview, checklist enforcement, publish', async () => {
+    await dnav('List an item').click();
+    const dl = d.locator('#screen-list');
+    await dl.getByRole('button', { name: 'Try sample' }).click();
+    await d.getByRole('complementary', { name: 'Listing preview' }).getByText('Dimmable LED Desk Lamp').waitFor();
+    await dl.getByRole('button', { name: 'Publish listing' }).click();
+    await dl.getByText('Complete every cleaning step before publishing.').waitFor();
+    for (const s of ['Dusted, shade included', 'Cord checked for damage', 'Bulb working', 'Switch tested']) await dl.getByText(s, { exact: true }).click();
+    await dl.getByRole('button', { name: 'Publish listing' }).click();
+    await dl.getByText('You’re live.').waitFor();
+  });
+  await check('switching to Phone keeps shared state and updates the URL', async () => {
+    await d.getByRole('radio', { name: 'Phone' }).click();
+    expect(!d.url().includes('view=desktop'), 'url still desktop');
+    expect((await d.locator('#app-frame').boundingBox()).width < 500, 'not phone frame');
+    await dnav('My claims').click();
+    await d.locator('#screen-claims').getByText('Handoff complete').waitFor();
+    await d.getByRole('radio', { name: 'Desktop' }).click();
+    expect(d.url().includes('view=desktop'), 'url missing view=desktop');
+  });
+  await check('reset demo works in desktop mode', async () => {
+    await d.getByRole('button', { name: 'Profile and demo options' }).click();
+    await d.getByRole('menuitem', { name: /Reset demo/ }).click();
+    expect((await dcards()) === 12, `got ${await dcards()}`);
+  });
+  await check('narrow window falls back to the phone app', async () => {
+    await d.setViewportSize({ width: 800, height: 900 });
+    await d.waitForTimeout(150);
+    expect((await d.locator('#app-frame').boundingBox()).width < 500, 'did not fall back');
+    const over = await d.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    expect(over <= 0, `overflow ${over}`);
+  });
+  await check('no horizontal overflow at 1024/1280/1920 in desktop mode', async () => {
+    for (const [w, h] of [[1024, 768], [1280, 720], [1920, 1080]]) {
+      await d.setViewportSize({ width: w, height: h });
+      await d.waitForTimeout(120);
+      const over = await d.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      expect(over <= 0, `overflow ${over}px at ${w}`);
+      if (SHOTS) await d.screenshot({ path: `${SHOTS}/desktop-${w}.png` });
+    }
+  });
+  await d.close();
+}
+
 console.log('\nLayout');
 for (const [w, h] of [
   [390, 844],

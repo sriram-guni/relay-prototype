@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Check, CircleCheck, Info, ShieldCheck, Star, TriangleAlert } from 'lucide-react';
 import { ProductArt } from '../art/ProductArt';
 import type { Listing } from '../data/types';
+import { useDesktop } from '../state/layout';
 import { useStore } from '../state/store';
 
 /* ---------------- Relay-checked badge ---------------- */
@@ -170,10 +171,11 @@ export function RatingInput({ value, onChange, label }: { value: number; onChang
 /* ---------------- Toast ---------------- */
 export function Toast() {
   const { toast } = useStore();
+  const desktop = useDesktop();
   if (!toast) return null;
   const Icon = toast.tone === 'warn' ? TriangleAlert : toast.tone === 'success' ? CircleCheck : Info;
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-3 z-[60] flex justify-center px-4" role="status" aria-live="polite">
+    <div className={`pointer-events-none absolute inset-x-0 ${desktop ? 'top-[86px]' : 'top-3'} z-[60] flex justify-center px-4`} role="status" aria-live="polite">
       <div
         key={toast.id}
         className="anim-toast flex max-w-full items-center gap-2 rounded-full bg-navy py-2.5 pl-3 pr-4 text-[13.5px] font-medium text-cream shadow-[0_12px_30px_-10px_rgba(20,33,61,0.55)]"
@@ -200,6 +202,7 @@ export function Sheet({
   variant?: 'sheet' | 'dialog';
 }) {
   const panel = useRef<HTMLDivElement>(null);
+  const desktop = useDesktop();
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
   useEffect(() => {
@@ -237,7 +240,7 @@ export function Sheet({
 
   if (!open) return null;
   return createPortal(
-    <div className={`absolute inset-0 z-50 flex ${variant === 'sheet' ? 'items-end' : 'items-center px-6'}`}>
+    <div className={`absolute inset-0 z-50 flex ${desktop ? 'items-center justify-center p-8' : variant === 'sheet' ? 'items-end' : 'items-center px-6'}`}>
       <div className="anim-fade-in absolute inset-0 bg-navy/45 backdrop-blur-[2px]" onClick={onClose} aria-hidden="true" />
       <div
         ref={panel}
@@ -246,12 +249,14 @@ export function Sheet({
         aria-label={label}
         tabIndex={-1}
         className={`relative w-full bg-cream outline-none ${
-          variant === 'sheet'
+          desktop
+            ? `anim-pop thin-scrollbar max-h-full overflow-y-auto rounded-[28px] shadow-[0_40px_90px_-30px_rgba(20,33,61,0.55)] ${variant === 'sheet' ? 'max-w-[480px] pb-6 pt-3' : 'max-w-[420px]'}`
+            : variant === 'sheet'
             ? 'anim-sheet-up max-h-[92%] overflow-y-auto rounded-t-[30px] pb-[max(20px,env(safe-area-inset-bottom))] thin-scrollbar'
             : 'anim-pop rounded-[26px] shadow-2xl'
         }`}
       >
-        {variant === 'sheet' && <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-[#d8d2c6]" aria-hidden="true" />}
+        {variant === 'sheet' && !desktop && <div className="mx-auto mt-2.5 h-1.5 w-10 rounded-full bg-[#d8d2c6]" aria-hidden="true" />}
         {children}
       </div>
     </div>,

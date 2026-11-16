@@ -2,7 +2,7 @@
 
 ## A. The 30-second walkthrough
 
-Start on **Discover** (open the app, or use **AR → Reset demo**).
+Start on **Discover** (open the app, or use **AR → Reset demo**). The steps work the same in the **Phone** and **Desktop** views; use the **Phone / Desktop** toggle if a judge wants to see the full-screen web version.
 
 1. **Discover (5 s).** "Students moving out list dorm essentials. Students moving in browse by their own hall." Tap **ISR** to show the hall filter, then **All halls**.
 2. **Trust (10 s).** Tap the featured **Compact Mini Fridge**. Point to Maya's 4.9 rating, then scroll to **Cleaned. Checked. Ready.**: "Every listing requires a category-specific cleaning checklist." Point to the **Pickup plan**.

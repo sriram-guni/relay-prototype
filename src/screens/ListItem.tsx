@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CircleAlert, ImagePlus, Info, Sparkles, Trash2, WandSparkles } from 'lucide-react';
-import { CATEGORIES, CLEANING_STEPS, CONDITIONS, DORM_AREAS, findRestrictedWord } from '../data/campus';
+import { CATEGORIES, CLEANING_STEPS, CONDITIONS, DORM_AREAS, dormInfo, findRestrictedWord } from '../data/campus';
 import { CATEGORY_FALLBACK_ART } from '../data/seed';
 import type { Category, Condition, DormArea, Listing } from '../data/types';
 import { ListingCard } from '../components/ListingCard';
 import { CheckMark, Chip, GhostButton, PrimaryButton, SuccessCheck } from '../components/ui';
 import { ProductArt } from '../art/ProductArt';
+import { useDesktop } from '../state/layout';
 import { useNav } from '../state/nav';
 import { useStore } from '../state/store';
 import { CATEGORY_ICON } from './Discover';
@@ -97,6 +98,7 @@ export function ListItem() {
   const [published, setPublished] = useState<Listing | null>(null);
   const [photoError, setPhotoError] = useState('');
   const top = useRef<HTMLDivElement>(null);
+  const desktop = useDesktop();
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((p) => ({ ...p, [k]: v }));
   const errors = validate(f);
@@ -161,7 +163,7 @@ export function ListItem() {
 
   if (published) {
     return (
-      <div ref={top} className="flex flex-col items-center px-6 pb-10 pt-[max(40px,env(safe-area-inset-top))] text-center">
+      <div ref={top} className={`mx-auto flex max-w-[460px] flex-col items-center px-6 pb-10 text-center ${desktop ? 'pt-20' : 'pt-[max(40px,env(safe-area-inset-top))]'}`}>
         <SuccessCheck />
         <h1 className="anim-fade-up mt-5 font-display text-[30px] font-semibold tracking-[-0.035em] text-navy" style={{ animationDelay: '120ms' }}>
           You’re live.
@@ -192,11 +194,15 @@ export function ListItem() {
   }
 
   return (
-    <div ref={top} className="px-5 pb-10 pt-[max(20px,env(safe-area-inset-top))]">
+    <div
+      ref={top}
+      className={desktop ? 'mx-auto grid max-w-[1240px] grid-cols-[minmax(0,1fr)_340px] gap-14 px-10 pb-16 pt-10' : 'px-5 pb-10 pt-[max(20px,env(safe-area-inset-top))]'}
+    >
+      <div className="min-w-0">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[11.5px] font-semibold uppercase tracking-[0.12em] text-orange-deep">Moving out?</p>
-          <h1 className="mt-1 font-display text-[30px] font-semibold leading-[1.05] tracking-[-0.035em] text-navy">Pass it forward.</h1>
+          <h1 className={`mt-1 font-display font-semibold leading-[1.05] tracking-[-0.035em] text-navy ${desktop ? 'text-[42px]' : 'text-[30px]'}`}>Pass it forward.</h1>
           <p className="mt-1.5 text-[14.5px] leading-snug text-muted">Your old essential could be someone’s new favorite.</p>
         </div>
         <button
@@ -471,6 +477,57 @@ export function ListItem() {
         </PrimaryButton>
         <p className="-mt-3 text-center text-[12px] text-muted">Prototype: listings are stored only in this browser session.</p>
       </form>
+      </div>
+      {desktop && <ListingPreview form={f} done={done} total={steps.length} />}
     </div>
+  );
+}
+
+/** Desktop-only live preview of the listing as buyers will see it. */
+function ListingPreview({ form: f, done, total }: { form: Form; done: number; total: number }) {
+  const preview: Listing = {
+    id: 'preview',
+    title: f.title.trim() || 'Your item title',
+    category: f.category ?? 'Fridge',
+    price: f.priceMode === 'free' ? 0 : Number(f.price) || 0,
+    dorm: (f.dorm ?? 'Your area') as Listing['dorm'],
+    hall: f.hall || 'your hall',
+    condition: f.condition ?? 'Good',
+    description: f.description,
+    sellerId: 'me',
+    relayChecked: false,
+    art: { ...CATEGORY_FALLBACK_ART[f.category ?? 'Fridge'] },
+    photoUrl: f.photo?.url,
+    cleaning: [],
+    postedLabel: 'Preview',
+    isOwn: true,
+  };
+  const rows: { label: string; value: string; ok: boolean }[] = [
+    { label: 'Cleaning checklist', value: total ? `${done} of ${total} steps` : 'Choose a category', ok: total > 0 && done === total },
+    { label: 'Pickup point', value: f.dorm ? dormInfo(f.dorm).pickup : 'Choose your residence area', ok: !!f.dorm && !!f.hall },
+    { label: 'Move-in claims', value: 'Aug 18–22, 2027', ok: true },
+  ];
+  return (
+    <aside className="sticky top-6 self-start" aria-label="Listing preview">
+      <p className="text-[12px] font-semibold uppercase tracking-[0.09em] text-muted">Live preview</p>
+      <div className="pointer-events-none mt-3 w-[250px]" aria-hidden="true" ref={(el) => el?.setAttribute('inert', '')}>
+        <ListingCard listing={preview} onOpen={() => undefined} />
+      </div>
+      <div className="mt-5 rounded-[20px] border border-line bg-card p-4">
+        <p className="text-[13.5px] font-semibold text-navy">What buyers will see</p>
+        <ul className="mt-3 space-y-3">
+          {rows.map((r) => (
+            <li key={r.label} className="flex items-start gap-3">
+              <CheckMark on={r.ok} size={20} />
+              <span className="min-w-0">
+                <span className="block text-[12px] text-muted">{r.label}</span>
+                <span className="block text-[13.5px] font-semibold text-ink">{r.value}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p className="mt-3 text-[12px] leading-snug text-muted">Prototype: listings are stored only in this browser session.</p>
+    </aside>
   );
 }

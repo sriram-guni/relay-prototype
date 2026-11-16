@@ -2,6 +2,7 @@ import { MapPin, Star } from 'lucide-react';
 import { formatPrice } from '../data/campus';
 import { sellerById } from '../data/seed';
 import type { Listing } from '../data/types';
+import { useDesktop } from '../state/layout';
 import { ListingImage, RelayBadge } from './ui';
 
 function Price({ value, large = false }: { value: number; large?: boolean }) {
@@ -60,6 +61,7 @@ export function ListingCard({ listing, onOpen, index = 0 }: { listing: Listing; 
 
 export function FeaturedCard({ listing, onOpen }: { listing: Listing; onOpen: () => void }) {
   const seller = sellerById(listing.sellerId);
+  const desktop = useDesktop();
   return (
     <button
       type="button"
@@ -68,14 +70,14 @@ export function FeaturedCard({ listing, onOpen }: { listing: Listing; onOpen: ()
       aria-label={`Featured: ${listing.title}, ${formatPrice(listing.price)}, ${listing.dorm} ${listing.hall}`}
       className="anim-fade-up press group col-span-2 grid grid-cols-[46%_1fr] overflow-hidden rounded-[24px] border border-line bg-card text-left hover:shadow-[0_18px_36px_-20px_rgba(20,33,61,0.4)] active:scale-[0.985]"
     >
-      <div className="relative aspect-[4/4.5] overflow-hidden">
+      <div className={`relative overflow-hidden ${desktop ? 'h-full min-h-[250px]' : 'aspect-[4/4.5]'}`}>
         <div className="h-full w-full transition-transform duration-300 ease-out group-hover:scale-[1.035]">
           <ListingImage listing={listing} />
         </div>
       </div>
       <div className="flex min-w-0 flex-col p-3.5 pl-4">
         <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-orange-deep">Featured near you</span>
-        <p className="mt-1.5 font-display text-[19px] font-semibold leading-[1.12] tracking-[-0.02em] text-navy">{listing.title}</p>
+        <p className={`mt-1.5 font-display font-semibold ${desktop ? 'text-[24px]' : 'text-[19px]'} leading-[1.12] tracking-[-0.02em] text-navy`}>{listing.title}</p>
         <p className="mt-1.5 flex items-center gap-1 text-[12.5px] text-muted">
           <MapPin size={12} className="shrink-0 text-orange" aria-hidden="true" />
           <span className="truncate">

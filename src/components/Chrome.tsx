@@ -4,16 +4,23 @@ import { DEMO_USER } from '../data/seed';
 import { useNav } from '../state/nav';
 import { useStore, type Tab } from '../state/store';
 
+export const NAV_ITEMS: { id: Tab; label: string; Icon: typeof Compass }[] = [
+  { id: 'discover', label: 'Discover', Icon: Compass },
+  { id: 'list', label: 'List an item', Icon: CirclePlus },
+  { id: 'claims', label: 'My claims', Icon: Package },
+];
+
+/** Claims still waiting on pickup or a rating (drives the nav badge). */
+export function useActiveClaims() {
+  const { claims } = useStore();
+  return claims.filter((c) => c.status !== 'Complete').length;
+}
+
 /* ---------------- Bottom navigation ---------------- */
 export function BottomNav() {
   const { tab, goTab } = useNav();
-  const { claims } = useStore();
-  const active = claims.filter((c) => c.status !== 'Complete').length;
-  const items: { id: Tab; label: string; Icon: typeof Compass }[] = [
-    { id: 'discover', label: 'Discover', Icon: Compass },
-    { id: 'list', label: 'List an item', Icon: CirclePlus },
-    { id: 'claims', label: 'My claims', Icon: Package },
-  ];
+  const active = useActiveClaims();
+  const items = NAV_ITEMS;
   return (
     <nav
       aria-label="Primary"

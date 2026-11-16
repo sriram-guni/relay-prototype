@@ -6,6 +6,7 @@ import type { Claim, ClaimStatus, Listing } from '../data/types';
 import { Price } from '../components/ListingCard';
 import { RelayMark } from '../components/Logo';
 import { EmptyState, GhostButton, ListingImage, PrimaryButton, RatingInput, Sheet } from '../components/ui';
+import { useDesktop } from '../state/layout';
 import { useNav } from '../state/nav';
 import { useStore } from '../state/store';
 
@@ -165,11 +166,12 @@ export function MyClaims() {
   const { goTab } = useNav();
   const items = claims.map((c) => ({ claim: c, listing: getListing(c.listingId) })).filter((x): x is { claim: Claim; listing: Listing } => !!x.listing);
   const active = items.filter((x) => x.claim.status !== 'Complete').length;
+  const desktop = useDesktop();
 
   return (
-    <div className="px-5 pb-10 pt-[max(20px,env(safe-area-inset-top))]">
+    <div className={desktop ? 'mx-auto max-w-[1240px] px-10 pb-16 pt-10' : 'px-5 pb-10 pt-[max(20px,env(safe-area-inset-top))]'}>
       <p className="text-[11.5px] font-semibold uppercase tracking-[0.12em] text-orange-deep">Moving in</p>
-      <h1 className="mt-1 font-display text-[30px] font-semibold leading-[1.05] tracking-[-0.035em] text-navy">Your move-in lineup.</h1>
+      <h1 className={`mt-1 font-display font-semibold leading-[1.05] tracking-[-0.035em] text-navy ${desktop ? 'text-[42px]' : 'text-[30px]'}`}>Your move-in lineup.</h1>
       <p className="mt-1.5 text-[14.5px] text-muted">Everything you’ve claimed, in one place.</p>
 
       {items.length > 0 ? (
@@ -180,7 +182,7 @@ export function MyClaims() {
             </span>
             <span className="rounded-full border border-line bg-card px-3 py-1.5 text-ink">{active} awaiting pickup or rating</span>
           </div>
-          <div className="mt-4 space-y-3.5">
+          <div className={desktop ? 'mt-6 grid grid-cols-2 items-start gap-5' : 'mt-4 space-y-3.5'}>
             {items.map((x, i) => (
               <ClaimCard key={x.claim.id} claim={x.claim} listing={x.listing} index={i} />
             ))}

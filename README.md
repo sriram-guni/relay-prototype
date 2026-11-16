@@ -39,13 +39,17 @@ Then open `http://localhost:4173`.
 
 - No backend, accounts, API keys or Wi-Fi needed. Fonts, images and icons are bundled.
 - Refreshing the page also resets the demo.
-- Best viewed in a laptop browser at full screen (the phone-style app sits next to the brand panel). On a phone, it becomes a normal full-screen app.
+- **Two views on a laptop**, switched with the **Phone / Desktop** toggle:
+  - **Phone** (default): the phone-sized app next to the brand panel. Best for the booth pitch.
+  - **Desktop**: a full-screen web app built for a computer: top navigation, sidebar filters with live counts, a 4-column grid, a two-column product page, a centered claim dialog, and a live preview while listing. Open it directly with `?view=desktop` (for example https://sriram-guni.github.io/relay-prototype/?view=desktop).
+  - Both views share the same data, so a claim made in one shows up in the other. Desktop needs a window at least 1024 px wide; narrower windows fall back to the phone app.
+- On a phone, it is always the normal full-screen mobile app.
 
 ## Other commands
 
 | Command | What it does |
 | --- | --- |
-| `npm test` | Automated end-to-end check of every demo flow (35 checks) in headless Edge or Chrome |
+| `npm test` | Automated end-to-end check of every demo flow (45 checks, phone and desktop views) in headless Edge or Chrome |
 | `npm run typecheck` | TypeScript check |
 | `npm run build` | Type check + production build into `dist/` |
 | `npm run assets` | Regenerates the poster images in `poster-assets/` |
@@ -61,7 +65,7 @@ Then open `http://localhost:4173`.
 | **List an item** | Full listing form with a required cleaning checklist, soft-goods restriction, Free / Set price toggle, optional photo upload, and a **Try sample** shortcut |
 | **My claims** | Reserved → Picked up → Complete, with pickup confirmation and a 5-star rating |
 
-The **AR** avatar (top right of Discover) opens **Reset demo**, which restores listings, claims, ratings, filters, the form and the current screen.
+The **AR** avatar (top right of Discover, or of the desktop navigation bar) opens **Reset demo**, which restores listings, claims, ratings, filters, the form and the current screen.
 
 See [DEMO.md](DEMO.md) for the 30-second walkthrough, pitch notes and judge Q&A.
 
@@ -78,6 +82,7 @@ Everything is in [`poster-assets/`](poster-assets):
 | `D-process-cream.png`, `D-process-navy.png`, `D-process-transparent.png` | LIST → CLAIM → PICK UP graphic |
 | `relay-logo.svg`, `relay-logo-on-navy.svg`, `relay-mark.svg`, `relay-app-icon.svg` (+ PNGs) | Vector logo (wordmark converted to outlines, so it prints correctly anywhere) |
 | `booth-desktop-view.png` | The full laptop composition, as judges will see it |
+| `F-desktop-app-discover.png`, `F-desktop-app-detail.png` | The standalone desktop app (Discover and the fridge product page) |
 
 Phone screenshots are 3× resolution with transparent corners, so they stay crisp printed at 4–6 inches tall.
 
@@ -102,7 +107,8 @@ src/
   data/seed.ts            12 fictional listings and sellers
   data/campus.ts          halls, pickup points, cleaning checklists, move-in dates, soft-goods rules
   screens/                Discover, ItemDetail, ListItem, MyClaims
-  components/             ListingCard, ClaimSheet, Logo, ProcessSteps, BottomNav, ui (badges, sheet, toast, rating...)
+  components/             ListingCard, ClaimSheet, Logo, ProcessSteps, BottomNav, DesktopChrome (top nav + view switch), ui (badges, sheet, toast, rating...)
+  state/layout.tsx        phone vs. desktop layout context
   art/ProductArt.tsx      SVG "studio photos" of each product
 scripts/qa.mjs            end-to-end test
 scripts/poster-assets.mjs poster image export
