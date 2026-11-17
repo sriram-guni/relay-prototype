@@ -10,7 +10,7 @@ interface DataState {
 }
 
 type Action =
-  | { type: 'claim'; listingId: string; moveInDate: string }
+  | { type: 'claim'; listingId: string; moveInDate: string; agreedPrice?: number }
   | { type: 'pickup'; claimId: string }
   | { type: 'rate'; claimId: string; rating: number }
   | { type: 'publish'; listing: Listing }
@@ -28,6 +28,7 @@ function reducer(state: DataState, action: Action): DataState {
         listingId: action.listingId,
         moveInDate: action.moveInDate,
         status: 'Reserved',
+        agreedPrice: action.agreedPrice,
       };
       return { ...state, claims: [claim, ...state.claims] };
     }
@@ -65,7 +66,7 @@ interface Store extends DataState {
   available: Listing[];
   claimedIds: Set<string>;
   getListing: (id: string) => Listing | undefined;
-  claim: (listingId: string, moveInDate: string) => void;
+  claim: (listingId: string, moveInDate: string, agreedPrice?: number) => void;
   confirmPickup: (claimId: string) => void;
   rate: (claimId: string, rating: number) => void;
   publish: (listing: Listing) => void;
@@ -94,7 +95,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       claimedIds,
       available: data.listings.filter((l) => !claimedIds.has(l.id)),
       getListing: (id) => data.listings.find((l) => l.id === id),
-      claim: (listingId, moveInDate) => dispatch({ type: 'claim', listingId, moveInDate }),
+      claim: (listingId, moveInDate, agreedPrice) => dispatch({ type: 'claim', listingId, moveInDate, agreedPrice }),
       confirmPickup: (claimId) => dispatch({ type: 'pickup', claimId }),
       rate: (claimId, rating) => dispatch({ type: 'rate', claimId, rating }),
       publish: (listing) => dispatch({ type: 'publish', listing }),

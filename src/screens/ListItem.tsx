@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { CircleAlert, ImagePlus, Info, Sparkles, Trash2, WandSparkles } from 'lucide-react';
+import { CircleAlert, Handshake, ImagePlus, Info, Sparkles, Trash2, TrendingUp, WandSparkles, Zap } from 'lucide-react';
+import { suggestPrice } from '../data/pricing';
 import { CATEGORIES, CLEANING_STEPS, CONDITIONS, DORM_AREAS, dormInfo, findRestrictedWord } from '../data/campus';
 import { CATEGORY_FALLBACK_ART } from '../data/seed';
 import type { Category, Condition, DormArea, Listing } from '../data/types';
@@ -20,6 +21,7 @@ interface Form {
   condition: Condition | null;
   priceMode: 'free' | 'set';
   price: string;
+  negotiable: boolean;
   description: string;
   checked: string[];
 }
@@ -33,6 +35,7 @@ const EMPTY: Form = {
   condition: null,
   priceMode: 'set',
   price: '',
+  negotiable: true,
   description: '',
   checked: [],
 };
@@ -91,7 +94,7 @@ function Field({ label, error, hint, children, id }: { label: string; error?: st
 }
 
 export function ListItem() {
-  const { publish, showToast } = useStore();
+  const { publish, showToast, listings } = useStore();
   const { openDetail, goTab } = useNav();
   const [f, setF] = useState<Form>(EMPTY);
   const [submitted, setSubmitted] = useState(false);
@@ -137,6 +140,7 @@ export function ListItem() {
       title: f.title.trim().replace(/\s+/g, ' '),
       category: f.category!,
       price: f.priceMode === 'free' ? 0 : Number(f.price),
+      negotiable: f.priceMode === 'set' && f.negotiable,
       dorm: f.dorm!,
       hall: f.hall,
       condition: f.condition!,
@@ -393,6 +397,25 @@ export function ListItem() {
               </p>
             )}
           </div>
+          {f.priceMode === 'set' && (
+            <>
+              <PriceAdvisor form={f} listings={listings} onUse={(n) => set('price', String(n))} />
+              <label className="press mt-3 flex cursor-pointer items-center gap-3 rounded-2xl border border-line bg-card px-3.5 py-3">
+                <Handshake size={18} className="shrink-0 text-orange-deep" aria-hidden="true" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[13.5px] font-semibold text-navy">Open to offers</span>
+                  <span className="block text-[12px] leading-snug text-muted">Buyers can bargain. Listings that accept offers tend to get claimed sooner.</span>
+                </span>
+                <input type="checkbox" className="peer sr-only" checked={f.negotiable} onChange={(e) => set('negotiable', e.target.checked)} />
+                <span
+                  aria-hidden="true"
+                  className={`relative h-6 w-10 shrink-0 rounded-full transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-orange ${f.negotiable ? 'bg-green' : 'bg-[#d5cfc3]'}`}
+                >
+                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${f.negotiable ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
+                </span>
+              </label>
+            </>
+          )}
         </Field>
 
         {/* description */}
@@ -529,5 +552,74 @@ function ListingPreview({ form: f, done, total }: { form: Form; done: number; to
       </div>
       <p className="mt-3 text-[12px] leading-snug text-muted">Prototype: listings are stored only in this browser session.</p>
     </aside>
+  );
+}
+
+/** Suggested price based on category, condition, listing text and comparable listings. */
+function PriceAdvisor({ form: f, listings, onUse }: { form: Form; listings: Listing[]; onUse: (n: number) => void }) {
+  if (!f.category || !f.condition) {
+    return (
+      <p className="mt-3 flex items-start gap-2 rounded-2xl bg-sand/70 px-3.5 py-3 text-[12.5px] leading-snug text-muted">
+        <TrendingUp size={14} className="mt-[1px] shrink-0 text-ink" aria-hidden="true" />
+        Pick a category and condition to get a suggested price.
+      </p>
+    );
+  }
+  const s = suggestPrice({ category: f.category, condition: f.condition, title: f.title, description: f.description, listings });
+  const cur = Number(f.price);
+  const verdict = !f.price
+    ? null
+    : cur > s.high
+    ? { text: 'Above the usual range. It may take longer to get claimed.', tone: 'text-[#B4472F]' }
+    : cur < s.low
+    ? { text: 'Below the usual range. Great for a fast handoff.', tone: 'text-green' }
+    : { text: 'Right in the sweet spot.', tone: 'text-green' };
+  const pct = Math.min(100, Math.max(0, ((cur - s.low * 0.7) / (s.high * 1.3 - s.low * 0.7)) * 100));
+  const lo = ((s.low - s.low * 0.7) / (s.high * 1.3 - s.low * 0.7)) * 100;
+  const hi = ((s.high - s.low * 0.7) / (s.high * 1.3 - s.low * 0.7)) * 100;
+
+  return (
+    <section aria-label="Suggested price" className="anim-fade-up mt-3 rounded-[20px] border border-orange/25 bg-orange-light/50 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="flex items-center gap-1.5 text-[11.5px] font-semibold uppercase tracking-[0.1em] text-orange-deep">
+            <TrendingUp size={13} aria-hidden="true" /> Suggested price
+          </p>
+          <p className="mt-1 font-display text-[26px] font-semibold leading-none tracking-[-0.03em] text-navy">${s.suggested}</p>
+          <p className="mt-1 text-[12px] text-muted">
+            Typical range ${s.low}–${s.high}
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-col gap-1.5">
+          <button type="button" onClick={() => onUse(s.suggested)} className="press rounded-full bg-navy px-3 py-1.5 text-[12.5px] font-semibold text-cream">
+            Use ${s.suggested}
+          </button>
+          <button
+            type="button"
+            onClick={() => onUse(s.quickSale)}
+            className="press inline-flex items-center justify-center gap-1 rounded-full border border-line bg-card px-3 py-1.5 text-[12.5px] font-semibold text-ink"
+          >
+            <Zap size={12} aria-hidden="true" /> Quick sale ${s.quickSale}
+          </button>
+        </div>
+      </div>
+
+      <div className="relative mt-3.5 h-2 rounded-full bg-[#e9e4da]" aria-hidden="true">
+        <div className="absolute inset-y-0 rounded-full bg-green/60" style={{ left: `${lo}%`, width: `${hi - lo}%` }} />
+        {f.price && <div className="absolute -top-1 h-4 w-1 -translate-x-1/2 rounded-full bg-navy" style={{ left: `${pct}%` }} />}
+      </div>
+      {verdict && <p className={`mt-2 text-[12.5px] font-semibold ${verdict.tone}`}>{verdict.text}</p>}
+
+      <p className="mt-2.5 text-[12px] leading-snug text-muted">Based on: {s.reasons.join(' · ')}</p>
+      {s.comps.length > 0 && (
+        <ul className="mt-2 flex flex-wrap gap-1.5">
+          {s.comps.map((c) => (
+            <li key={c.id} className="rounded-full border border-line bg-card px-2.5 py-1 text-[11.5px] text-ink">
+              {c.title.length > 22 ? c.title.slice(0, 21) + '…' : c.title} · <span className="font-semibold">${c.price}</span> · {c.condition}
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

@@ -6,7 +6,7 @@ import { useNav } from '../state/nav';
 import { useStore } from '../state/store';
 import { GhostButton, ListingImage, PrimaryButton, Sheet, SuccessCheck } from './ui';
 
-export function ClaimSheet({ listing, open, onClose }: { listing: Listing; open: boolean; onClose: () => void }) {
+export function ClaimSheet({ listing, open, onClose, agreedPrice }: { listing: Listing; open: boolean; onClose: () => void; agreedPrice?: number }) {
   const { claim, claimedIds } = useStore();
   const { closeDetail, goTab } = useNav();
   const [date, setDate] = useState<string | null>(null);
@@ -19,7 +19,7 @@ export function ClaimSheet({ listing, open, onClose }: { listing: Listing; open:
 
   const confirm = () => {
     if (!date || claimedIds.has(listing.id)) return;
-    claim(listing.id, date);
+    claim(listing.id, date, agreedPrice);
     setDone(true);
   };
 
@@ -47,7 +47,12 @@ export function ClaimSheet({ listing, open, onClose }: { listing: Listing; open:
                 {pickup}
               </p>
             </div>
-            <p className="pr-1.5 font-display text-[17px] font-semibold text-navy">{formatPrice(listing.price)}</p>
+            <div className="pr-1.5 text-right">
+              <p className="font-display text-[17px] font-semibold text-navy">{formatPrice(agreedPrice ?? listing.price)}</p>
+              {agreedPrice !== undefined && agreedPrice !== listing.price && (
+                <p className="text-[11.5px] text-muted line-through">{formatPrice(listing.price)}</p>
+              )}
+            </div>
           </div>
 
           <fieldset className="mt-5">
