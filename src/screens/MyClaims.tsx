@@ -67,7 +67,12 @@ function ClaimCard({ claim, listing, index }: { claim: Claim; listing: Listing; 
           <div className="flex items-start justify-between gap-2">
             <h3 className="line-clamp-2 text-[15.5px] font-semibold leading-snug text-navy">{listing.title}</h3>
             <div className="shrink-0">
-              <Price value={listing.price} />
+              <Price value={claim.agreedPrice ?? listing.price} />
+              {claim.agreedPrice !== undefined && claim.agreedPrice !== listing.price && (
+                <p className="text-right text-[11px] text-muted">
+                  <span className="line-through">${listing.price}</span> · offer
+                </p>
+              )}
             </div>
           </div>
           <p className="mt-1.5 flex items-center gap-1.5 text-[12.5px] text-ink">

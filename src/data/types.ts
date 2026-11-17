@@ -42,6 +42,8 @@ export interface Listing {
   title: string;
   category: Category;
   price: number; // 0 = Free
+  /** Seller accepts offers (bargaining). Defaults to true for priced items. */
+  negotiable?: boolean;
   dorm: DormArea;
   hall: string;
   condition: Condition;
@@ -64,5 +66,7 @@ export interface Claim {
   listingId: string;
   moveInDate: string; // ISO yyyy-mm-dd, fixed in August 2027
   status: ClaimStatus;
+  /** Final price if the buyer negotiated a deal. */
+  agreedPrice?: number;
   rating?: number;
 }

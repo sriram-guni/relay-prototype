@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { ArrowLeft, CalendarDays, Hand, MapPin, ShieldCheck, Sparkles, Star } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Hand, Handshake, MapPin, ShieldCheck, Sparkles, Star } from 'lucide-react';
 import { dormInfo, formatMoveIn, formatPrice } from '../data/campus';
 import { sellerById } from '../data/seed';
 import type { Listing } from '../data/types';
 import { Price } from '../components/ListingCard';
 import { ClaimSheet } from '../components/ClaimSheet';
+import { OfferSheet } from '../components/OfferSheet';
 import { CheckMark, GhostButton, ListingImage, PrimaryButton, SectionLabel } from '../components/ui';
 import { useDesktop } from '../state/layout';
 import { useNav } from '../state/nav';
@@ -68,11 +69,14 @@ export function ItemDetail({ listingId }: { listingId: string }) {
   const { closeDetail, goTab } = useNav();
   const desktop = useDesktop();
   const [sheet, setSheet] = useState(false);
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [deal, setDeal] = useState<number | undefined>();
   const listing = getListing(listingId);
   if (!listing) return null;
   const seller = sellerById(listing.sellerId);
   const dorm = dormInfo(listing.dorm);
   const claim = claims.find((c) => c.listingId === listing.id);
+  const canOffer = listing.price > 0 && listing.negotiable !== false;
 
   const relayBadge = (top: string) =>
     listing.relayChecked && (
@@ -196,20 +200,46 @@ export function ItemDetail({ listingId }: { listingId: string }) {
       </GhostButton>
     </div>
   ) : (
-    <div className="flex items-center gap-4">
-      <div className="shrink-0">
-        <p className="text-[11.5px] text-muted">Price</p>
-        <p className={`font-display font-semibold leading-tight tracking-[-0.02em] text-navy ${desktop ? 'text-[28px]' : 'text-[20px]'}`}>
-          {formatPrice(listing.price)}
-        </p>
+    <div>
+      <div className="flex items-center gap-3">
+        <div className="shrink-0">
+          <p className="text-[11.5px] text-muted">{deal !== undefined ? 'Your deal' : canOffer ? 'Price · open to offers' : 'Price'}</p>
+          <p className={`font-display font-semibold leading-tight tracking-[-0.02em] text-navy ${desktop ? 'text-[28px]' : 'text-[20px]'}`}>
+            {formatPrice(deal ?? listing.price)}
+            {deal !== undefined && deal !== listing.price && (
+              <span className="ml-1.5 align-middle text-[13px] font-medium text-muted line-through">{formatPrice(listing.price)}</span>
+            )}
+          </p>
+        </div>
+        {canOffer && deal === undefined && (
+          <GhostButton type="button" className="shrink-0 px-3.5" onClick={() => setOfferOpen(true)}>
+            <Handshake size={16} aria-hidden="true" /> Offer
+          </GhostButton>
+        )}
+        <PrimaryButton type="button" className="flex-1" onClick={() => setSheet(true)}>
+          {deal !== undefined ? `Claim at ${formatPrice(deal)}` : 'Claim for move-in day'}
+        </PrimaryButton>
       </div>
-      <PrimaryButton type="button" className="flex-1" onClick={() => setSheet(true)}>
-        Claim for move-in day
-      </PrimaryButton>
     </div>
   );
 
-  const claimSheet = <ClaimSheet listing={listing} open={sheet} onClose={() => setSheet(false)} />;
+  const claimSheet = (
+    <>
+      <ClaimSheet listing={listing} open={sheet} onClose={() => setSheet(false)} agreedPrice={deal} />
+      {canOffer && (
+        <OfferSheet
+          listing={listing}
+          open={offerOpen}
+          onClose={() => setOfferOpen(false)}
+          onDeal={(p) => {
+            setDeal(p);
+            setOfferOpen(false);
+            setSheet(true);
+          }}
+        />
+      )}
+    </>
+  );
 
   /* ---------- desktop: two-column product page ---------- */
   if (desktop) {
